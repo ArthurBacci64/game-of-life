@@ -15,14 +15,7 @@ Clone the repository:
 ```
  git clone https://github.com/ArthurBacci64/game-of-life
  cd game-of-life
-```
-
-Compile `main.c` file.
-
-#### With gcc
-
-```
-$ gcc main.c -o game-of-life
+ make
 ```
 
 #### To run
@@ -33,12 +26,26 @@ $ ./game-of-life
 
 ### Install
 
-To install you will need to compile before (see `compile and run`)
+To install globally ( to all users ), run this as ROOT:
 
 ```
-# cp ./game-of-life /usr/bin/game-of-life
-# chmod 555 /usr/bin/game-of-life
+# make install
 ```
+
+If you want to install only to your user:
+
+```
+$ make install-locally
+```
+
+To uninstall:
+
+```
+# make uninstall
+```
+
+( if you only installed locally you can run without sudo )
+
 
 ### How to use it
 
@@ -77,3 +84,4 @@ If you like to contribute, just do a pull request with the following steps:
 - [x] Key to compute one step
 - [ ] Map function keys to put common shapes like `block`, `blinker`, `pulsar`, `glider`...
 - [ ] Add auto reload on screen size change, trying to preserve the max amount of data in the grid 
+- [x] Make a Makefile

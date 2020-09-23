@@ -2,10 +2,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <termios.h>
+#include <unistd.h>
 
 
 /*** RAW MODE ***/
@@ -95,15 +95,18 @@ void showGrid(int cx, int cy)
     for (int j = 0; j < grid.cols; j++)
     {
       if (i == cy && j == cx)
-	appendBuffer("\x1b[4m", 4);
+      {
+        if (grid.data[i * grid.cols + j])
+          appendBuffer("\x1b[7m##\x1b[m", 9);
+        else
+          appendBuffer("##", 2);
+        continue;
+      }
 	
       if (grid.data[i * grid.cols + j])
-	appendBuffer("██", 6);
+	    appendBuffer("\x1b[7m  \x1b[m", 9);
       else
-	appendBuffer("  ", 2);
-
-      if (i == cy && j == cx)
-	appendBuffer("\x1b[m", 3);
+	    appendBuffer("  ", 2);
     }
     appendBuffer("\r\n", 2 * (i < grid.rows - 1));
   }
@@ -207,7 +210,7 @@ int main()
     struct Grid next = { 0, 0, NULL };
     setGrid(cols, rows, &next);
 
-    if (playing)
+    if (playing > 0)
     {
       for (int i = 0; i < rows; i++)
       {
@@ -227,37 +230,53 @@ int main()
 	}
       }
       grid = next;
+
+      // 1 == playing, 2 == only one step
+      if (playing == 2)
+          playing = 0;
     }
     
     
     unsigned char c;
     if (!read(STDIN_FILENO, &c, 1)) continue;
-
     
     switch (c)
       {
 	case 'q':
 	  _continue = 0;
 	  break;
-	case ' ':
-	  playing = !playing;
+	case 'p':
+	  playing = playing == 0;
 	  break;
+    case 's':
+      playing = 2;
+      break;
   
-	case 'w':
-	  cy -= (cy > 0);
+	case 'k':
+      if (!playing)
+	    cy -= (cy > 0);
 	  break;
-	case 's':
-	  cy += (cy < rows - 1);
+	case 'j':
+      if (!playing)
+	    cy += (cy < rows - 1);
 	  break;
-	case 'a':
-	  cx -= (cx > 0);
+	case 'h':
+      if (!playing)
+	    cx -= (cx > 0);
 	  break;
-	case 'd':
-	  cx += (cx < cols - 1);
+	case 'l':
+      if (!playing)
+	    cx += (cx < cols - 1);
 	  break;
-	case 'e':
-	  grid.data[cy * grid.cols + cx] = !grid.data[cy * grid.cols + cx];
+
+	case ' ':
+      if (!playing)
+	    grid.data[cy * grid.cols + cx] = !grid.data[cy * grid.cols + cx];
 	  break;
+    case 'c':
+      if (!playing)
+        setGrid(cols, rows, &grid);
+      break;
       }
   }
   

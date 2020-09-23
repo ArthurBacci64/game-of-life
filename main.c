@@ -43,16 +43,16 @@ void enableRawMode()
 struct Buffer
 {
   int len; // The buffer's length
-  unsigned char *data; // The buffer memory location
+  char *data; // The buffer memory location
 };
 
 // The global buffer
 struct Buffer buf = { 0, NULL };
 
 // To append data to the buffer
-void appendBuffer(unsigned char *data, int len)
+void appendBuffer(char *data, int len)
 {
-  buf.data = (unsigned char *)realloc(buf.data, buf.len + len);
+  buf.data = (char *)realloc(buf.data, buf.len + len);
   memcpy(&buf.data[buf.len], data, len);
   buf.len += len;
 }
@@ -200,8 +200,8 @@ int main()
     appendBuffer("\x1b[?25l", 6);
     if (playing) showGrid(-1, -1);
     else         showGrid(cx, cy);
-    unsigned char buf[80];
-    int buflen = snprintf(buf, 80, "\x1b[%d;%dH", cy + 1, cx + 1);
+    char *buf = malloc(20);
+    int buflen = snprintf(buf, 20, "\x1b[%d;%dH", cy + 1, cx + 1);
     appendBuffer(buf, buflen);
     
     showBuffer();

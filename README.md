@@ -2,6 +2,12 @@
 
 ## made with vt100 terminal escape sequences.
 
+### Not working at Windows OS
+
+This code uses the `termios.h` header that's present on unix-like system only
+
+Feel free to do a pull request adding Windows OS support
+
 ### Compile and run
 
 Clone the repository:
@@ -36,7 +42,18 @@ To install you will need to compile before (see `compile and run`)
 
 ### How to use it
 
-You have your cursor represented by `__`. Press `E` to toggle the selected cell status. `WASD` to move the cursor, ` ` ( `SPACE` ) to Play/Stop and `Q` to quit.
+| FUNCTION | KEY(S) |
+| ----------- | ----------- |
+| QUIT | 'q' |
+| PLAY/STOP | 'p' |
+| PLAY1STEP | 's' |
+| MOVE LEFT | 'h' |
+| MOVE RIGHT | 'l' |
+| MOVE DOWN | 'j' |
+| MOVE UP | 'k' |
+| CHANGE BLOCK STATUS | `ESPACE` |
+| CLEAR GRID | 'c' |
+
 
 ### Contribute
 
@@ -52,10 +69,11 @@ If you like to contribute, just do a pull request with the following steps:
 
 ### To-do list
 
-- Multiplatform support ( to work with WindowsOS )
-- Movement with arrow keys
-- More apparent cursor
-- Do a parameter parser
-- Change the play velocity
-- Key to compute one step
-- Map function keys to put common shapes like `block`, `blinker`, `pulsar`, `glider`...
+- [ ] Multiplatform support ( to work with WindowsOS )
+- [ ] Movement with arrow keys
+- [x] More apparent cursor
+- [ ] Do a parameter parser
+- [ ] Change the play velocity
+- [x] Key to compute one step
+- [ ] Map function keys to put common shapes like `block`, `blinker`, `pulsar`, `glider`...
+- [ ] Add auto reload on screen size change, trying to preserve the max amount of data in the grid 

@@ -2,6 +2,8 @@
 
 ## made with vt100 terminal escape sequences.
 
+<a href="https://asciinema.org/a/361528" target="_blank"><img src="https://asciinema.org/a/361528.svg" /></a>
+
 ### Not working at Windows OS
 
 This code uses the `termios.h` header that's present on unix-like system only
@@ -85,3 +87,4 @@ If you like to contribute, just do a pull request with the following steps:
 - [ ] Map function keys to put common shapes like `block`, `blinker`, `pulsar`, `glider`...
 - [ ] Add auto reload on screen size change, trying to preserve the max amount of data in the grid 
 - [x] Make a Makefile
+- [ ] Start using NCurses

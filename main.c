@@ -112,49 +112,73 @@ char playing = 0;
 
 int cols, rows;
 
+int CONFIG_PLAYSPEED = 10;
+
 void processKeypress(int k)
 {
-  if (k == CTRL_KEY('c'))
-    stop = 1;
-  else if (k == 'p')
-    playing = playing == 0;
-
-  if (playing != 0)
-    return;
-
-  switch (k)
+  if (playing > 0)
   {
-  case 's':
-    playing = 2;
-    break;
+    switch (k)
+    {
+    case CTRL_KEY('c'):
+      stop = 1;
+      break;
+    case 'p':
+      playing = 0;
+      break;
+    case '+':
+    case '=':
+      if (CONFIG_PLAYSPEED < 1000)
+        CONFIG_PLAYSPEED++;
+      break;
+    case '-':
+      if (CONFIG_PLAYSPEED > 0)
+        CONFIG_PLAYSPEED--;
+      break;
+    }
+  }
+  else
+  {
+    switch (k)
+    {
+    case CTRL_KEY('c'):
+      stop = 1;
+      break;
+    case 'p':
+      playing = 1;
+      break;
+    case 's':
+      playing = 2;
+      break;
 
-  case 'k':
-  case CTRL_KEY('p'):
-  case KEY_UP:
-    cy -= (cy > 0);
-    break;
-  case 'j':
-  case CTRL_KEY('n'):
-  case KEY_DOWN:
-    cy += (cy < grid.rows - 1);
-    break;
-  case 'h':
-  case CTRL_KEY('b'):
-  case KEY_LEFT:
-    cx -= (cx > 0);
-    break;
-  case 'l':
-  case CTRL_KEY('f'):
-  case KEY_RIGHT:
-    cx += (cx < grid.cols - 1);
-    break;
+    case 'k':
+    case CTRL_KEY('p'):
+    case KEY_UP:
+      cy -= (cy > 0);
+      break;
+    case 'j':
+    case CTRL_KEY('n'):
+    case KEY_DOWN:
+      cy += (cy < grid.rows - 1);
+      break;
+    case 'h':
+    case CTRL_KEY('b'):
+    case KEY_LEFT:
+      cx -= (cx > 0);
+      break;
+    case 'l':
+    case CTRL_KEY('f'):
+    case KEY_RIGHT:
+      cx += (cx < grid.cols - 1);
+      break;
 
-  case ' ':
-    grid.data[cy * grid.cols + cx] = !grid.data[cy * grid.cols + cx];
-    break;
-  case 'c':
-    setGrid(cols, rows, &grid);
-    break;
+    case ' ':
+      grid.data[cy * grid.cols + cx] = !grid.data[cy * grid.cols + cx];
+      break;
+    case 'c':
+      setGrid(cols, rows, &grid);
+      break;
+    }
   }
 }
 
@@ -186,7 +210,7 @@ int main()
       if (playing == 2)
         playing = 0;
 
-      napms(100);
+      napms(1000 / CONFIG_PLAYSPEED);
     }
 
     int k;

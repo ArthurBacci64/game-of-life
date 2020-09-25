@@ -1,71 +1,13 @@
 /*** INCLUDES ***/
 
+#include <ncurses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include <termios.h>
-#include <unistd.h>
 
+/*** DEFINES ***/
 
-/*** RAW MODE ***/
-
-struct termios terminalConfig;
-
-void disableRawMode()
-{
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &terminalConfig);
-}
-
-void enableRawMode()
-{
-  tcgetattr(STDIN_FILENO, &terminalConfig);
-  atexit(disableRawMode);
-
-  struct termios tc = terminalConfig;
-
-  tc.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN | ICRNL);
-  tc.c_iflag &= ~(IXON);
-  tc.c_oflag &= ~(OPOST);
-
-  tc.c_iflag &= ~(BRKINT | INPCK | ISTRIP);
-  tc.c_cflag |= CS8;
-
-  tc.c_cc[VMIN] = 0;
-  tc.c_cc[VTIME] = 1; // 1 = 1/10s = 100ms
-  
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &tc);
-}
-
-
-/*** BUFFER ***/
-
-struct Buffer
-{
-  int len; // The buffer's length
-  char *data; // The buffer memory location
-};
-
-// The global buffer
-struct Buffer buf = { 0, NULL };
-
-// To append data to the buffer
-void appendBuffer(char *data, int len)
-{
-  buf.data = (char *)realloc(buf.data, buf.len + len);
-  memcpy(&buf.data[buf.len], data, len);
-  buf.len += len;
-}
-
-// Show the buffer
-void showBuffer()
-{
-  write(STDOUT_FILENO, buf.data, buf.len);
-  free(buf.data);
-  buf.data = NULL;
-  buf.len = 0;
-}
-
+#define CTRL_KEY(k) ((k)&0x1f) // CTRL+k
 
 /*** GRID ***/
 
@@ -73,16 +15,18 @@ struct Grid
 {
   int cols;
   int rows;
+  int realcols;
   unsigned char *data;
 };
 
-struct Grid grid = { 0, 0, NULL };
+struct Grid grid = {0, 0, 0, NULL};
 
 // Allocates the grid size
 void setGrid(int cols, int rows, struct Grid *g)
 {
-  g->cols = cols;
+  g->cols = cols / 2; // A block ocupates two characters of width
   g->rows = rows;
+  g->realcols = cols;
   free(g->data);
   g->data = (unsigned char *)calloc(cols * rows, sizeof(unsigned char));
 }
@@ -94,195 +38,162 @@ void showGrid(int cx, int cy)
   {
     for (int j = 0; j < grid.cols; j++)
     {
-      if (i == cy && j == cx)
-      {
-        if (grid.data[i * grid.cols + j])
-          appendBuffer("\x1b[7m##\x1b[m", 9);
-        else
-          appendBuffer("##", 2);
-        continue;
-      }
-	
       if (grid.data[i * grid.cols + j])
-	    appendBuffer("\x1b[7m  \x1b[m", 9);
+        attrset(A_REVERSE);
+
+      if (i == cy && j == cx)
+        addstr("##");
       else
-	    appendBuffer("  ", 2);
+        addstr("  ");
+
+      if (grid.data[i * grid.cols + j])
+        attroff(A_REVERSE);
     }
-    appendBuffer("\r\n", 2 * (i < grid.rows - 1));
+    if ((i < (grid.rows - 1)) && ((grid.realcols - (grid.cols * 2)) != 0))
+      addstr("\n");
   }
 }
 
 unsigned int neighboursOf(int x, int y)
 {
   unsigned int n = 0;
-  
+
   if (x > 0)
   {
     if (y > 0)
-      n += grid.data[(y-1) * grid.cols + (x-1)];
-    n += grid.data[y * grid.cols + (x-1)];
+      n += grid.data[(y - 1) * grid.cols + (x - 1)];
+    n += grid.data[y * grid.cols + (x - 1)];
     if (y < grid.rows - 1)
-      n += grid.data[(y+1) * grid.cols + (x-1)];
+      n += grid.data[(y + 1) * grid.cols + (x - 1)];
   }
-  
+
   if (y > 0)
-    n += grid.data[(y-1) * grid.cols + x];
+    n += grid.data[(y - 1) * grid.cols + x];
   // That is the middle, I am the middle
   if (y < grid.rows - 1)
-    n += grid.data[(y+1) * grid.cols + x];
+    n += grid.data[(y + 1) * grid.cols + x];
 
   if (x < grid.cols - 1)
   {
     if (y > 0)
-      n += grid.data[(y-1) * grid.cols + (x+1)];
-    n += grid.data[y * grid.cols + (x+1)];
+      n += grid.data[(y - 1) * grid.cols + (x + 1)];
+    n += grid.data[y * grid.cols + (x + 1)];
     if (y < grid.rows - 1)
-      n += grid.data[(y+1) * grid.cols + (x+1)];
+      n += grid.data[(y + 1) * grid.cols + (x + 1)];
   }
 
   return n;
 }
 
-
-/*** WINDOW SIZE ***/
-
-int getWindowSize(int *cols, int *rows)
+void updateGrid(int cols, int rows)
 {
-  write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12);
-  write(STDOUT_FILENO, "\x1b[6n", 4);
+  struct Grid next = {0, 0, 0, NULL};
+  setGrid(cols, rows, &next);
 
-  write(STDOUT_FILENO, "\x1b[2J", 4);
-  write(STDOUT_FILENO, "\x1b[H", 3);
-
-  char buf[80];
-  int at = 0;
-
-  read(STDIN_FILENO, &buf[at], 1);
-  if (buf[0] != '\x1b')
-    return 1;
-  read(STDIN_FILENO, &buf[++at], 1);
-  if (buf[1] != '[')
-    return -1;
-
-  read(STDIN_FILENO, &buf[++at], 1);
-  while (buf[at] != 'R')
-    read(STDIN_FILENO, &buf[++at], 1);
-
-  buf[at] = '\0';
-
-  sscanf(&buf[2], "%d;%d", rows, cols);
-    
-  return 0;
+  for (int i = 0; i < grid.rows; i++)
+  {
+    for (int j = 0; j < grid.cols; j++)
+    {
+      unsigned char neighbours = neighboursOf(j, i);
+      if (grid.data[i * grid.cols + j])
+        next.data[i * grid.cols + j] = (neighbours == 2 || neighbours == 3);
+      else
+        next.data[i * grid.cols + j] = (neighbours == 3);
+    }
+  }
+  grid = next;
 }
 
+/*** MAIN FUNCTIONS ***/
 
-/*** MAIN ***/
+char stop = 0;
+int cx = 0, cy = 0;
+char playing = 0;
+
+int cols, rows;
+
+void processKeypress(int k)
+{
+  if (k == CTRL_KEY('c'))
+    stop = 1;
+  else if (k == 'p')
+    playing = playing == 0;
+
+  if (playing != 0)
+    return;
+
+  switch (k)
+  {
+  case 's':
+    playing = 2;
+    break;
+
+  case 'k':
+  case CTRL_KEY('p'):
+  case KEY_UP:
+    cy -= (cy > 0);
+    break;
+  case 'j':
+  case CTRL_KEY('n'):
+  case KEY_DOWN:
+    cy += (cy < grid.rows - 1);
+    break;
+  case 'h':
+  case CTRL_KEY('b'):
+  case KEY_LEFT:
+    cx -= (cx > 0);
+    break;
+  case 'l':
+  case CTRL_KEY('f'):
+  case KEY_RIGHT:
+    cx += (cx < grid.cols - 1);
+    break;
+
+  case ' ':
+    grid.data[cy * grid.cols + cx] = !grid.data[cy * grid.cols + cx];
+    break;
+  case 'c':
+    setGrid(cols, rows, &grid);
+    break;
+  }
+}
 
 int main()
 {
+  initscr();
+  raw();
+  noecho();
+  nodelay(stdscr, TRUE);
+  curs_set(0);
+  keypad(stdscr, TRUE);
 
-  enableRawMode();
-
-  int cols, rows;
-  getWindowSize(&cols, &rows);
-  cols /= 2; // A block ocupates two characters of width
-  
+  getmaxyx(stdscr, rows, cols);
   setGrid(cols, rows, &grid);
 
-  int cx = 0, cy = 0;
-  char playing = 0;
-  char _continue = 1;
-  
-  while (_continue)
+  while (!stop)
   {
-    appendBuffer("\x1b[2J", 4);
-    appendBuffer("\x1b[H", 3);
-    appendBuffer("\x1b[?25l", 6);
-    if (playing) showGrid(-1, -1);
-    else         showGrid(cx, cy);
-    char *buf = malloc(20);
-    int buflen = snprintf(buf, 20, "\x1b[%d;%dH", cy + 1, cx + 1);
-    appendBuffer(buf, buflen);
-    
-    showBuffer();
-
-
-    struct Grid next = { 0, 0, NULL };
-    setGrid(cols, rows, &next);
+    move(0, 0);
+    if (playing)
+      showGrid(-1, -1);
+    else
+      showGrid(cx, cy);
+    refresh();
 
     if (playing > 0)
     {
-      for (int i = 0; i < rows; i++)
-      {
-	for (int j = 0; j < cols; j++)
-	{
-	  unsigned char neighbours = neighboursOf(j, i);
-	  if (grid.data[i * cols + j])
-	  {
-	    // It is alive
-	    next.data[i * cols + j] = (neighbours == 2 || neighbours == 3);
-	  }
-	  else
-	  {
-	    // It is dead
-	    next.data[i * cols + j] = (neighbours == 3);
-	  }
-	}
-      }
-      grid = next;
-
+      updateGrid(cols, rows);
       // 1 == playing, 2 == only one step
       if (playing == 2)
-          playing = 0;
-    }
-    
-    
-    unsigned char c;
-    if (!read(STDIN_FILENO, &c, 1)) continue;
-    
-    switch (c)
-      {
-	case 'q':
-	  _continue = 0;
-	  break;
-	case 'p':
-	  playing = playing == 0;
-	  break;
-    case 's':
-      playing = 2;
-      break;
-  
-	case 'k':
-      if (!playing)
-	    cy -= (cy > 0);
-	  break;
-	case 'j':
-      if (!playing)
-	    cy += (cy < rows - 1);
-	  break;
-	case 'h':
-      if (!playing)
-	    cx -= (cx > 0);
-	  break;
-	case 'l':
-      if (!playing)
-	    cx += (cx < cols - 1);
-	  break;
+        playing = 0;
 
-	case ' ':
-      if (!playing)
-	    grid.data[cy * grid.cols + cx] = !grid.data[cy * grid.cols + cx];
-	  break;
-    case 'c':
-      if (!playing)
-        setGrid(cols, rows, &grid);
-      break;
-      }
+      napms(100);
+    }
+
+    int k;
+    if ((k = getch()) == ERR)
+      continue;
+    processKeypress(k);
   }
-  
-  write(STDOUT_FILENO, "\x1b[2J", 4);
-  write(STDOUT_FILENO, "\x1b[H", 3);
-  write(STDOUT_FILENO, "\x1b[?25h", 6);
-  
+  endwin();
   return 0;
 }

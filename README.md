@@ -1,21 +1,17 @@
 # Conway Game of Life
 
-## made with vt100 terminal escape sequences.
+## made with NCurses.
 
-### Not working at Windows OS
-
-This code uses the `termios.h` header that's present on unix-like system only
-
-Feel free to do a pull request adding Windows OS support
+<a href="https://asciinema.org/a/361528" target="_blank"><img src="https://asciinema.org/a/361528.svg" /></a>
 
 ### Compile and run
 
 Clone the repository:
 
 ```
- git clone https://github.com/ArthurBacci64/game-of-life
- cd game-of-life
- make
+$ git clone https://github.com/ArthurBacci64/game-of-life
+$ cd game-of-life
+$ make
 ```
 
 #### To run
@@ -51,13 +47,13 @@ To uninstall:
 
 | FUNCTION | KEY(S) |
 | ----------- | ----------- |
-| QUIT | 'q' |
+| QUIT | `CTRL + 'c'` |
 | PLAY/STOP | 'p' |
 | PLAY1STEP | 's' |
-| MOVE LEFT | 'h' |
-| MOVE RIGHT | 'l' |
-| MOVE DOWN | 'j' |
-| MOVE UP | 'k' |
+| MOVE LEFT | 'h', `CTRL+'B'`, `KEY_LEFT` |
+| MOVE RIGHT | 'l', `CTRL+'F'`, `KEY_RIGHT` |
+| MOVE DOWN | 'j', `CTRL+'N'`, `KEY_DOWN` |
+| MOVE UP | 'k', `CTRL+'P'`, `KEY_UP` |
 | CHANGE BLOCK STATUS | `ESPACE` |
 | CLEAR GRID | 'c' |
 
@@ -76,12 +72,15 @@ If you like to contribute, just do a pull request with the following steps:
 
 ### To-do list
 
-- [ ] Multiplatform support ( to work with WindowsOS )
-- [ ] Movement with arrow keys
+- [X] Movement with arrow keys
 - [x] More apparent cursor
 - [ ] Do a parameter parser
 - [ ] Change the play velocity
 - [x] Key to compute one step
-- [ ] Map function keys to put common shapes like `block`, `blinker`, `pulsar`, `glider`...
 - [ ] Add auto reload on screen size change, trying to preserve the max amount of data in the grid 
 - [x] Make a Makefile
+- [X] Start using NCurses
+- [ ] Make a panel with some status like number of live cells, number of death cells, canvas size...
+- [ ] Make a menu on press `F1` to insert common shapes like block, blinker, pulsar, glider...
+- [ ] Colorize it!
+- [ ] Mouse compatibility

@@ -72,13 +72,15 @@ If you like to contribute, just do a pull request with the following steps:
 
 ### To-do list
 
-- [ ] Multiplatform support ( to work with WindowsOS )
 - [X] Movement with arrow keys
 - [x] More apparent cursor
 - [ ] Do a parameter parser
 - [ ] Change the play velocity
 - [x] Key to compute one step
-- [ ] Map function keys to put common shapes like `block`, `blinker`, `pulsar`, `glider`...
 - [ ] Add auto reload on screen size change, trying to preserve the max amount of data in the grid 
 - [x] Make a Makefile
 - [X] Start using NCurses
+- [ ] Make a panel with some status like number of live cells, number of death cells, canvas size...
+- [ ] Make a menu on press `F1` to insert common shapes like block, blinker, pulsar, glider...
+- [ ] Colorize it!
+- [ ] Mouse compatibility

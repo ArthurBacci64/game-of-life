@@ -45,17 +45,19 @@ To uninstall:
 
 ### How to use it
 
-| FUNCTION | KEY(S) |
-| ----------- | ----------- |
-| QUIT | `CTRL + 'c'` |
-| PLAY/STOP | 'p' |
-| PLAY1STEP | 's' |
-| MOVE LEFT | 'h', `CTRL+'B'`, `KEY_LEFT` |
-| MOVE RIGHT | 'l', `CTRL+'F'`, `KEY_RIGHT` |
-| MOVE DOWN | 'j', `CTRL+'N'`, `KEY_DOWN` |
-| MOVE UP | 'k', `CTRL+'P'`, `KEY_UP` |
-| CHANGE BLOCK STATUS | `ESPACE` |
-| CLEAR GRID | 'c' |
+| FUNCTION            | KEY(S)                       |
+| ------------------- | ---------------------------- |
+| QUIT                | `CTRL + 'c'`                 |
+| PLAY/STOP           | 'p'                          |
+| PLAY1STEP           | 's'                          |
+| MOVE LEFT           | 'h', `CTRL+'B'`, `KEY_LEFT`  |
+| MOVE RIGHT          | 'l', `CTRL+'F'`, `KEY_RIGHT` |
+| MOVE DOWN           | 'j', `CTRL+'N'`, `KEY_DOWN`  |
+| MOVE UP             | 'k', `CTRL+'P'`, `KEY_UP`    |
+| CHANGE BLOCK STATUS | `ESPACE`                     |
+| CLEAR GRID          | 'c'                          |
+| PLAY SPEED ++       | '+', '='                     |
+| PLAY SPEED --       | '-'                          |
 
 
 ### Contribute
@@ -84,3 +86,4 @@ If you like to contribute, just do a pull request with the following steps:
 - [ ] Make a menu on press `F1` to insert common shapes like block, blinker, pulsar, glider...
 - [ ] Colorize it!
 - [ ] Mouse compatibility
+- [ ] Some basic customization system

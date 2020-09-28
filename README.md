@@ -20,7 +20,7 @@ $ make
 $ ./game-of-life
 ```
 
-### Install
+### Install ( GNU/Linux )
 
 To install globally ( to all users ), run this as ROOT:
 
@@ -47,7 +47,7 @@ To uninstall:
 
 | FUNCTION            | KEY(S)                       |
 | ------------------- | ---------------------------- |
-| QUIT                | `CTRL + 'c'`                 |
+| QUIT                | `CTRL+'C'`                 |
 | PLAY/STOP           | 'p'                          |
 | PLAY1STEP           | 's'                          |
 | MOVE LEFT           | 'h', `CTRL+'B'`, `KEY_LEFT`  |
@@ -58,6 +58,7 @@ To uninstall:
 | CLEAR GRID          | 'c'                          |
 | PLAY SPEED ++       | '+', '='                     |
 | PLAY SPEED --       | '-'                          |
+| HIDE/UNHIDE PANEL   | `CTRL+'H'`                   |
 
 
 ### Contribute
@@ -77,12 +78,12 @@ If you like to contribute, just do a pull request with the following steps:
 - [X] Movement with arrow keys
 - [x] More apparent cursor
 - [ ] Do a parameter parser
-- [ ] Change the play velocity
+- [x] Change the play velocity
 - [x] Key to compute one step
 - [ ] Add auto reload on screen size change, trying to preserve the max amount of data in the grid 
 - [x] Make a Makefile
 - [X] Start using NCurses
-- [ ] Make a panel with some status like number of live cells, number of death cells, canvas size...
+- [x] Make a panel with some status like number of live cells, number of death cells, canvas size...
 - [ ] Make a menu on press `F1` to insert common shapes like block, blinker, pulsar, glider...
 - [ ] Colorize it!
 - [ ] Mouse compatibility

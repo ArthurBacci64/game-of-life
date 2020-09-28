@@ -9,6 +9,35 @@
 
 #define CTRL_KEY(k) ((k)&0x1f) // CTRL+k
 
+/*** GLOBAL VARIABLES ***/
+
+typedef enum
+{
+  TOP,
+  BOTTOM,
+  LEFT,
+  UP
+} POS;
+
+// TODO: This will be in a config file
+struct
+{
+  int playspeed; // Play velocity
+  POS panelpos;  // Panel position, can be only TOP or BOTTOM
+  char showpanel; // Show the panel?
+} CFG = { 10, TOP, 1 };
+
+struct
+{
+  int livecells;
+  int deathcells;
+} STATUS = { 0, 0 };
+
+int cols, rows;
+char stop = 0;
+int cx = 0, cy = 0;
+char playing = 0;
+
 /*** GRID ***/
 
 struct Grid
@@ -34,23 +63,26 @@ void setGrid(int cols, int rows, struct Grid *g)
 // Shows the grid and free the grid
 void showGrid(int cx, int cy)
 {
-  for (int i = 0; i < grid.rows; i++)
+  for (int i = (CFG.showpanel && (CFG.panelpos == TOP)); i < grid.rows - (CFG.showpanel && (CFG.panelpos == BOTTOM)); i++)
   {
     for (int j = 0; j < grid.cols; j++)
     {
       if (grid.data[i * grid.cols + j])
+      {
         attrset(A_REVERSE);
+      }
+      STATUS.livecells += grid.data[i * grid.cols + j] == 1;
+      STATUS.deathcells += grid.data[i * grid.cols + j] == 0;
 
       if (i == cy && j == cx)
         addstr("##");
       else
         addstr("  ");
 
-      if (grid.data[i * grid.cols + j])
-        attroff(A_REVERSE);
+      attrset(A_NORMAL);
     }
-    if ((i < (grid.rows - 1)) && ((grid.realcols - (grid.cols * 2)) != 0))
-      addstr("\n");
+    if ((grid.realcols - (grid.cols * 2)) != 0)
+      addch(' ');
   }
 }
 
@@ -104,15 +136,36 @@ void updateGrid(int cols, int rows)
   grid = next;
 }
 
+/*** THE PANEL ***/
+
+void drawPanel()
+{
+  if ((CFG.panelpos != TOP && CFG.panelpos != BOTTOM) || CFG.showpanel != 1)
+    return;
+
+  char *lbuf = malloc(grid.cols + 1);
+  int lbuflen = snprintf(lbuf, grid.cols, "A%d D%d", STATUS.livecells, STATUS.deathcells);
+  lbuf[lbuflen] = '\0';
+
+  char *rbuf = malloc(grid.cols + 1);
+  int rbuflen = snprintf(rbuf, grid.cols, "%d:%d%s", cy, cx, playing ? " Playing" : "");
+  if (rbuflen > (cols - lbuflen))
+    rbuflen = cols - lbuflen;
+  rbuf[rbuflen] = '\0';
+  
+  move(0 + grid.rows * (CFG.panelpos == BOTTOM), 0);
+  attron(A_REVERSE);
+  addstr(lbuf);
+  while (lbuflen < (cols - rbuflen))
+  {
+    addch(' ');
+    lbuflen++;
+  }
+  addstr(rbuf);
+  attroff(A_REVERSE);
+}
+
 /*** MAIN FUNCTIONS ***/
-
-char stop = 0;
-int cx = 0, cy = 0;
-char playing = 0;
-
-int cols, rows;
-
-int CONFIG_PLAYSPEED = 10;
 
 void processKeypress(int k)
 {
@@ -128,12 +181,15 @@ void processKeypress(int k)
       break;
     case '+':
     case '=':
-      if (CONFIG_PLAYSPEED < 1000)
-        CONFIG_PLAYSPEED++;
+      if (CFG.playspeed < 1000)
+        CFG.playspeed++;
       break;
     case '-':
-      if (CONFIG_PLAYSPEED > 0)
-        CONFIG_PLAYSPEED--;
+      if (CFG.playspeed > 0)
+        CFG.playspeed--;
+      break;
+    case CTRL_KEY('h'):
+      CFG.showpanel = !CFG.showpanel;
       break;
     }
   }
@@ -178,6 +234,9 @@ void processKeypress(int k)
     case 'c':
       setGrid(cols, rows, &grid);
       break;
+    case CTRL_KEY('h'):
+      CFG.showpanel = !CFG.showpanel;
+      break;
     }
   }
 }
@@ -196,11 +255,20 @@ int main()
 
   while (!stop)
   {
+    STATUS.livecells = 0;
+    STATUS.deathcells = 0;
+
     move(0, 0);
+    if (CFG.panelpos == TOP)
+      drawPanel();
+    
     if (playing)
       showGrid(-1, -1);
     else
       showGrid(cx, cy);
+    if (CFG.panelpos == BOTTOM)
+      drawPanel();
+
     refresh();
 
     if (playing > 0)
@@ -210,7 +278,7 @@ int main()
       if (playing == 2)
         playing = 0;
 
-      napms(1000 / CONFIG_PLAYSPEED);
+      napms(1000 / CFG.playspeed);
     }
 
     int k;

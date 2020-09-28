@@ -4,7 +4,7 @@ game-of-life: main.c
 	$(CC) -o game-of-life main.c -Wall -W -pedantic -std=c99 -lncurses
 
 clean:
-	rm game-of-life
+	rm -f game-of-life
 
 install:
 	$(CC) -o /usr/bin/game-of-life main.c -Wall -W -pedantic -std=c99 -lncurses
